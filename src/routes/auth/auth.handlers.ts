@@ -7,15 +7,21 @@ import { Provider } from "prisma/generated/enums";
 import type { AppRouteHandler } from "../../lib/types";
 import { toUserResponseSchema } from "../../schemas/user/user-response.schema";
 import type {
+	ForgotPasswordRoutes,
+	GetMeRoutes,
 	GetSessionsRoutes,
 	LoginRoutes,
 	LogoutRoutes,
 	RegisterRoutes,
+	ResetPasswordRoutes,
 } from "./auth.routes";
 import { UAParser } from "ua-parser-js";
 import { getConnInfo } from 'hono/bun'
+import { verify } from "hono/jwt";
+import { env } from "../../config/env";
+import { catchError, errorResponse, successResponse } from "../../utils/response";
 
-function getDeviceInfo(c: Context) {
+const getDeviceInfo = (c: Context) => {
 	const userAgent = c.req.header("user-agent") || "Unknown";
 	const ipAddress = getConnInfo(c);
 
@@ -26,7 +32,7 @@ function getDeviceInfo(c: Context) {
 }
 
 
-async function manageUserSessions(userId: string, maxSessions: number = 5) {
+const manageUserSessions = async (userId: string, maxSessions: number = 5) => {
 	await prisma.session.deleteMany({
 		where: {
 			userId,
@@ -66,7 +72,7 @@ async function manageUserSessions(userId: string, maxSessions: number = 5) {
 export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 	try {
 		const { email, password } = c.req.valid("json");
-		const secret = process.env.JWT_SECRET ?? "";
+		const secret = env.JWT_SECRET;
 
 		const user = await prisma.user.findUnique({
 			where: {
@@ -86,14 +92,7 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 		});
 
 		if (!user) {
-			return c.json(
-				{
-					message: "User not found",
-					success: false,
-					errors: ["User not found"],
-				},
-				404,
-			);
+			return errorResponse(c, 'User not found', ['User not found'], 404);
 		}
 
 		const isPasswordValid = await Bun.password.verify(
@@ -102,14 +101,7 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 		);
 
 		if (!isPasswordValid) {
-			return c.json(
-				{
-					message: "Invalid password",
-					success: false,
-					errors: ["Invalid password"],
-				},
-				400,
-			);
+			return errorResponse(c, 'Invalid password', ['Invalid password'], 400);
 		}
 
 		const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2); // 2 days
@@ -142,32 +134,20 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 			},
 		});
 
-		return c.json(
-			{
-				message: "Login successful",
-				success: true,
-				data: {
-					token,
-					refreshToken,
-					user: toUserResponseSchema(user),
-				},
-			},
-			200,
-		);
-	} catch (error) {
-		if (error instanceof HTTPException) {
-			throw error;
-		}
-		throw new HTTPException(500, {
-			message: "Internal server error",
+		return successResponse(c, 'Login successful', {
+			token,
+			refreshToken,
+			user: toUserResponseSchema(user),
 		});
+	} catch (error) {
+		return catchError(error);
 	}
 };
 
 export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 	try {
 		const { email, password, fullName, username } = c.req.valid("json");
-		const secret = process.env.JWT_SECRET ?? "";
+		const secret = env.JWT_SECRET;
 
 		const existingUser = await prisma.user.findFirst({
 			where: {
@@ -179,14 +159,7 @@ export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 		});
 
 		if (existingUser) {
-			return c.json(
-				{
-					message: "User already exists",
-					success: false,
-					errors: ["User already exists"],
-				},
-				400,
-			);
+			return errorResponse(c, 'User already exists', ['User already exists'], 400);
 		}
 
 		const hashedPassword = await Bun.password.hash(password);
@@ -246,25 +219,13 @@ export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 			},
 		});
 
-		return c.json(
-			{
-				message: "Register successful",
-				success: true,
-				data: {
-					token,
-					refreshToken,
-					user: toUserResponseSchema(user),
-				},
-			},
-			200,
-		);
+		return successResponse(c, 'Register successful', {
+			token,
+			refreshToken,
+			user: toUserResponseSchema(user),
+		}, 200);
 	} catch (error) {
-		if (error instanceof HTTPException) {
-			throw error;
-		}
-		throw new HTTPException(500, {
-			message: "Internal server error",
-		});
+		return catchError(error);
 	}
 };
 
@@ -280,14 +241,7 @@ export const logoutHandler: AppRouteHandler<LogoutRoutes> = async (c) => {
 			});
 
 			if (!session) {
-				return c.json(
-					{
-						message: "User is not logged in",
-						success: false,
-						errors: ["User is not logged in"],
-					},
-					401,
-				);
+				return errorResponse(c, 'User is not logged in', ['User is not logged in'], 401);
 			}
 
 			await prisma.session.delete({
@@ -296,16 +250,9 @@ export const logoutHandler: AppRouteHandler<LogoutRoutes> = async (c) => {
 				},
 			});
 
-			return c.json(
-				{
-					message: "Logged out from device successfully",
-					success: true,
-					data: {
-						message: "Logged out from device successfully",
-					},
-				},
-				200,
-			);
+			return successResponse(c, 'Logged out from device successfully', {
+				message: 'Logged out from device successfully',
+			});
 		}
 
 		const session = await prisma.session.findUnique({
@@ -322,23 +269,11 @@ export const logoutHandler: AppRouteHandler<LogoutRoutes> = async (c) => {
 			});
 		}
 
-		return c.json(
-			{
-				message: "Logged out successfully",
-				success: true,
-				data: {
-					message: "Logged out successfully",
-				},
-			},
-			200,
-		);
-	} catch (error) {
-		if (error instanceof HTTPException) {
-			throw error;
-		}
-		throw new HTTPException(500, {
-			message: "Internal server error",
+		return successResponse(c, 'Logged out successfully', {
+			message: 'Logged out successfully',
 		});
+	} catch (error) {
+		return catchError(error);
 	}
 };
 
@@ -379,22 +314,102 @@ export const getSessionsHandler: AppRouteHandler<GetSessionsRoutes> = async (
 			isCurrent: session.sessionToken === token,
 		}));
 
-		return c.json(
-			{
-				message: "Sessions retrieved successfully",
-				success: true,
-				data: {
-					sessions: sessionsData,
-				},
-			},
-			200,
-		);
-	} catch (error) {
-		if (error instanceof HTTPException) {
-			throw error;
-		}
-		throw new HTTPException(500, {
-			message: "Internal server error",
+		return successResponse(c, 'Sessions retrieved successfully', {
+			sessions: sessionsData,
 		});
+	} catch (error) {
+		return catchError(error);
+	}
+};
+
+export const getMeHandler: AppRouteHandler<GetMeRoutes> = async (c) => {
+	try {
+		const userId = c.var.userId;
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+		});
+
+		if (!user) {
+				return errorResponse(c, 'User not found', ['User not found'], 404);
+		}
+
+		return successResponse(c, 'User retrieved successfully', {
+			user: toUserResponseSchema(user),
+		});
+	} catch (error) {
+		return catchError(error);
+	}
+}
+
+export const forgotPasswordHandler: AppRouteHandler<ForgotPasswordRoutes> = async (c) => {
+	try {
+		const { email } = c.req.valid("json");
+
+		const user = await prisma.user.findUnique({
+			where: { email },
+		});
+
+		if (!user) {
+			return errorResponse(c, 'User not found', ['User not found'], 404);
+		}
+
+		const secret = env.JWT_SECRET;
+		const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
+		const payload = {
+			id: user?.id,
+			email: user?.email,
+			role: user?.role,
+			expires: expires.toISOString(),
+		};
+
+		const _token = await sign(payload, secret, "HS256");
+
+		// TODO: Send email to user with reset password token
+
+		return successResponse(c, 'Forgot password successful', {
+			message: 'Forgot password successful',
+		});
+	} catch (error) {
+		return catchError(error);
+	}
+};
+
+export const resetPasswordHandler: AppRouteHandler<ResetPasswordRoutes> = async (c) => {
+	try {
+		const { token, password, confirmPassword } = c.req.valid("json");
+
+		if (password !== confirmPassword) {
+			return errorResponse(c, 'Passwords do not match', ['Passwords do not match'], 400);
+		}
+
+		const secret = env.JWT_SECRET;
+		const isVerifiedToken = await verify(token, secret, "HS256");
+		const expireAt = new Date(isVerifiedToken.exp as number * 1000);
+
+		if (!isVerifiedToken) throw new HTTPException(400, { message: "Invalid token" });
+		if (expireAt < new Date()) throw new HTTPException(400, { message: "Token expired" });
+
+		const hashedPassword = await Bun.password.hash(password);
+
+		const account = await prisma.account.findFirst({
+			where: { userId: isVerifiedToken.id as string },
+		});
+
+		if (!account) throw new HTTPException(400, { message: "Account not found" });
+
+		await prisma.account.update({
+			where: { id: account.id },
+			data: { password: hashedPassword },
+		});
+
+		await prisma.session.deleteMany({
+			where: { userId: isVerifiedToken.id as string },
+		});
+
+		return successResponse(c, 'Reset password successful', {
+			message: 'Reset password successful',
+		});
+	} catch (error) {
+		return catchError(error);
 	}
 };

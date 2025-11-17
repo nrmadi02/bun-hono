@@ -30,3 +30,10 @@ export const sessionsResponseSchema = z.object({
 export const logoutResponseSchema = z.object({
 	message: z.string(),
 });
+
+export const forgotPasswordResponseSchema = z.boolean();
+export const resetPasswordResponseSchema = z.boolean();
+
+export const getMeResponseSchema = z.object({
+	user: userResponseSchema,
+});

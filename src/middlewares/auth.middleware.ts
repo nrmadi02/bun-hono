@@ -2,6 +2,9 @@ import { verify } from "hono/jwt";
 
 import type { Context, Next } from "hono";
 import { createMiddleware } from "hono/factory";
+import { env } from "../config/env";
+import prisma from "prisma";
+import { errorResponse } from "../utils/response";
 
 export const validateToken =createMiddleware<{
   Variables: {
@@ -14,15 +17,23 @@ export const validateToken =createMiddleware<{
 ) => {
 	const authHeader = c.req.header("Authorization");
 	if (!authHeader || !authHeader.startsWith("Bearer ")) {
-		return c.json({
-			message: "Unauthorized - No token provided",
-			success: false,
-			errors: ["Unauthorized - No token provided"],
-		}, 401);
+		return errorResponse(c, "Unauthorized - No token provided", ["Unauthorized - No token provided"], 401);
 	}
 
 	const token = authHeader.substring(7);
-	const secret = process.env.JWT_SECRET ?? "";
+	const secret = env.JWT_SECRET;
+
+	const findToken = await prisma.session.findUnique({
+		where: { sessionToken: token },
+	});
+
+	if (!findToken) {
+		return errorResponse(c, "Unauthorized - Invalid token", ["Unauthorized - Invalid token"], 401);
+	}
+
+	if (findToken.expireAt < new Date()) {
+		return errorResponse(c, "Unauthorized - Token expired", ["Unauthorized - Token expired"], 401);
+	}
 
 	try {
 		const payload = await verify(token, secret, "HS256");
@@ -30,10 +41,6 @@ export const validateToken =createMiddleware<{
 		c.set("token", token);
 		await next();
 	} catch {
-		return c.json({
-			message: "Unauthorized - Invalid token",
-			success: false,
-			errors: ["Unauthorized - Invalid token"],
-		}, 401);
+		return errorResponse(c, "Unauthorized - Invalid token", ["Unauthorized - Invalid token"], 401);
 	}
 });
