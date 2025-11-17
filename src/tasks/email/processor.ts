@@ -1,0 +1,18 @@
+import type { Job } from 'bullmq';
+import { sendEmailVerificationJob } from './jobs/send-email-verification.job';
+
+export const EMAIL_TASK = {
+  SendVerificationEmail: 'send_verification_email',
+} as const;
+
+export type EmailTaskName = typeof EMAIL_TASK[keyof typeof EMAIL_TASK];
+
+export const emailWorkerProcessor = async (job: Job) => {
+  switch (job.name as EmailTaskName) {
+    case EMAIL_TASK.SendVerificationEmail:
+      return await sendEmailVerificationJob(job.data.emails);
+    default:
+      console.warn('[email] Unknown task', job.name, job.data);
+  }
+};
+
