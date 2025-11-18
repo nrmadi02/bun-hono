@@ -1,11 +1,11 @@
 import { resendEmail } from "../../../lib/resend";
 import { EmailVerificationTemplate } from "../templates/email-verification.template";
 
-export const sendEmailVerificationJob = async (emails: string[]) => {
+export const sendEmailVerificationJob = async (emails: string[], token: string) => {
   try {
     console.log('[email] Sending email verification', emails);
     
-    const response = await resendEmail(emails, 'Email Verification', EmailVerificationTemplate({ firstName: 'Nur Ahmadi' }));
+    const response = await resendEmail(emails, 'Email Verification', EmailVerificationTemplate({ token }));
     if(response.error) {
       throw new Error(response.error.message);
     }

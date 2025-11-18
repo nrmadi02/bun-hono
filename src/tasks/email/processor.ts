@@ -10,7 +10,7 @@ export type EmailTaskName = typeof EMAIL_TASK[keyof typeof EMAIL_TASK];
 export const emailWorkerProcessor = async (job: Job) => {
   switch (job.name as EmailTaskName) {
     case EMAIL_TASK.SendVerificationEmail:
-      return await sendEmailVerificationJob(job.data.emails);
+      return await sendEmailVerificationJob(job.data.emails, job.data.token);
     default:
       console.warn('[email] Unknown task', job.name, job.data);
   }
