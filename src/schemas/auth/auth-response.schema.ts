@@ -8,8 +8,6 @@ export const loginResponseSchema = z.object({
 });
 
 export const registerResponseSchema = z.object({
-	token: z.string(),
-	refreshToken: z.string(),
 	user: userResponseSchema,
 });
 
@@ -31,7 +29,9 @@ export const logoutResponseSchema = z.object({
 	message: z.string(),
 });
 
-export const forgotPasswordResponseSchema = z.boolean();
+export const forgotPasswordResponseSchema = z.object({
+	token: z.string(),
+});
 export const resetPasswordResponseSchema = z.boolean();
 
 export const getMeResponseSchema = z.object({
