@@ -1,0 +1,84 @@
+name: CI/CD Bun Hono
+
+on:
+  push:
+    branches:
+      - master
+      - staging
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set TAG by branch
+        id: vars
+        run: |
+          if [ "${GITHUB_REF##*/}" = "master" ]; then
+            echo "TAG=production" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set ENV by branch
+        id: vars
+        run: |
+          if [ "${GITHUB_REF##*/}" = "master" ]; then
+            echo "TAG=production" >> $GITHUB_OUTPUT
+            echo "COMPOSE_FILE=docker-compose.production.yml" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=staging" >> $GITHUB_OUTPUT
+            echo "COMPOSE_FILE=docker-compose.staging.yml" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy via SSH (password)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script: |
+            cd /project
+
+            # login GHCR untuk podman
+            # kalau image kamu private, pakai PAT; kalau public, bagian ini bisa di-skip
+            echo "${{ secrets.GHCR_PAT }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin || true
+
+            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }}"
+
+            podman pull $IMAGE
+
+            # pastikan docker-compose.*.yml sudah pakai image yang sama
+            podman-compose -f ${{ steps.vars.outputs.COMPOSE_FILE }} up -d
