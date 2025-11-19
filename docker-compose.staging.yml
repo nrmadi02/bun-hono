@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  api:
+    image: ghcr.io/nrmadi02/hono-bun:staging
+    container_name: hono-bun-staging
+    env_file:
+      - .env.staging
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    networks:
+      - internal
+
+  redis:
+    image: redis:7
+    container_name: redis-staging
+    restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+

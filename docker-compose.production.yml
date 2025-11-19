@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  api:
+    image: ghcr.io/nrmadi02/hono-bun:master
+    container_name: hono-bun-production
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    depends_on:
+      - redis
+    networks:
+      - internal
+
+  redis:
+    image: redis:7
+    container_name: redis-production
+    restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
