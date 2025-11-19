@@ -18,7 +18,7 @@ const Layout: FC<PropsWithChildren> = (props) => {
 
 interface VerifyEmailViewProps {
 	success?: boolean;
-	message?: string;
+	message?: string;	
 }
 
 export const VerifyEmailView = ({ success, message }: VerifyEmailViewProps = {}) => {
@@ -76,40 +76,14 @@ export const VerifyEmailView = ({ success, message }: VerifyEmailViewProps = {})
 						</div>
 					</div>
 
-					{/* Title */}
 					<h1 class="text-2xl md:text-3xl font-bold text-center mb-3 text-gray-900">
 						{isSuccess ? "Verifikasi Berhasil!" : "Verifikasi Gagal"}
 					</h1>
 
-					{/* Message */}
 					<p class="text-gray-600 text-center mb-8 leading-relaxed">
 						{displayMessage}
 					</p>
 
-					{/* Action Button */}
-					{isSuccess ? (
-						<a
-							href="/auth/login"
-							class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-center block"
-						>
-							Masuk ke Akun
-						</a>
-					) : (
-						<div class="space-y-3">
-							<a
-								href="/auth/login"
-								class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-center block"
-							>
-								Kembali ke Login
-							</a>
-							<button
-								type="button"
-								class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-							>
-								Kirim Ulang Email Verifikasi
-							</button>
-						</div>
-					)}
 				</div>
 			</div>
 		</Layout>
