@@ -16,7 +16,7 @@ pipeline {
 
     stage('Deploy staging') {
       when {
-        branch 'staging'
+        branch 'origin/staging'
       }
       steps {
         sshagent(credentials: ['ssh-ubuntu']) {
@@ -39,7 +39,7 @@ pipeline {
 
     stage('Deploy production') {
       when {
-        branch 'master'
+        branch 'origin/master'
       }
       steps {
         sshagent(credentials: ['ssh-ubuntu']) {
