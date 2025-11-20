@@ -27,7 +27,13 @@ pipeline {
           string(credentialsId: 'server-host', variable: 'SERVER_HOST')
         ]) {
           sh """
-            chmod 600 /dev/null || true
+            if command -v sshpass >/dev/null 2>&1; then
+              echo "sshpass available"
+            else
+              if command -v apt-get >/dev/null 2>&1; then
+                apt-get update && apt-get install -y sshpass || true
+              fi
+            fi
             sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SERVER_HOST} '
               set -e
               cd ${PROJECT_DIR}
@@ -53,7 +59,13 @@ pipeline {
           string(credentialsId: 'server-host', variable: 'SERVER_HOST')
         ]) {
           sh """
-            chmod 600 /dev/null || true
+            if command -v sshpass >/dev/null 2>&1; then
+              echo "sshpass available"
+            else
+              if command -v apt-get >/dev/null 2>&1; then
+                apt-get update && apt-get install -y sshpass || true
+              fi
+            fi
             sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SERVER_HOST} '
               set -e
               cd ${PROJECT_DIR}
