@@ -75,7 +75,7 @@ pipeline {
         slackSend(
           channel: env.SLACK_CHANNEL,
           color: 'good',
-          message: "✅ *Deployment ${environment} SUCCESS*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.BRANCH_NAME}\n<${env.BUILD_URL}|View Build>",
+          message: "*Deployment ${environment} SUCCESS*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.BRANCH_NAME}\n<${env.BUILD_URL}|View Build>",
           tokenCredentialId: env.SLACK_CREDENTIAL_ID
         )
       }
@@ -87,7 +87,7 @@ pipeline {
         slackSend(
           channel: env.SLACK_CHANNEL,
           color: 'danger',
-          message: "❌ *Deployment ${environment} FAILED*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.GIT_BRANCH.contains('staging') ? 'STAGING' : 'PRODUCTION'}\n<${env.BUILD_URL}|View Build>",
+          message: "*Deployment ${environment} FAILED*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.BRANCH_NAME}\n<${env.BUILD_URL}|View Build>",
           tokenCredentialId: env.SLACK_CREDENTIAL_ID
         )
       }
@@ -99,7 +99,7 @@ pipeline {
         slackSend(
           channel: env.SLACK_CHANNEL,
           color: 'warning',
-          message: "⚠️ *Deployment ${environment} ABORTED*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.GIT_BRANCH.contains('staging') ? 'STAGING' : 'PRODUCTION'}\n<${env.BUILD_URL}|View Build>",
+          message: "*Deployment ${environment} ABORTED*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.BRANCH_NAME}\n<${env.BUILD_URL}|View Build>",
           tokenCredentialId: env.SLACK_CREDENTIAL_ID
         )
       }
