@@ -20,8 +20,8 @@ pipeline {
     stage('Deploy staging') {
       when {
         expression {
-          return (BRANCH_NAME == 'staging') || 
-                 (GIT_BRANCH?.contains('staging'))
+          return (env.BRANCH_NAME == 'staging') || 
+                 (env.GIT_BRANCH?.contains('staging'))
         }
       }
       steps {
@@ -44,8 +44,8 @@ pipeline {
     stage('Deploy production') {
       when {
         expression {
-          return (BRANCH_NAME == 'master') || 
-                 (GIT_BRANCH?.contains('master'))
+          return (env.BRANCH_NAME == 'master') || 
+                 (env.GIT_BRANCH?.contains('master'))
         }
       }
       steps {
