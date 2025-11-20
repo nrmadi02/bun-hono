@@ -8,6 +8,16 @@ pipeline {
   }
 
   stages {
+    stage('Debug branch') {
+      steps {
+        sh '''
+          echo "BRANCH_NAME=${BRANCH_NAME}"
+          echo "GIT_BRANCH=${GIT_BRANCH}"
+        '''
+      }
+    }
+
+
     stage('Build & Push (GitHub Actions)') {
       steps {
         echo 'Build & push GitHub Actions'
@@ -22,26 +32,21 @@ pipeline {
       }
       steps {
         withCredentials([
+          sshUserPrivateKey(credentialsId: 'ssh-ubuntu-key', keyFileVariable: 'SSH_KEYFILE', usernameVariable: 'SSH_USER'),
           string(credentialsId: 'ghcr-pat', variable: 'GHCR_PAT'),
-          usernamePassword(credentialsId: 'ssh-ubuntu', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS'),
           string(credentialsId: 'server-host', variable: 'SERVER_HOST')
         ]) {
-          sh """
-            if command -v sshpass >/dev/null 2>&1; then
-              echo "sshpass available"
-            else
-              if command -v apt-get >/dev/null 2>&1; then
-                apt-get update && apt-get install -y sshpass || true
-              fi
-            fi
-            sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SERVER_HOST} '
+          sh '''
+            set -e
+            chmod 600 "$SSH_KEYFILE"
+            ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" '
               set -e
               cd ${PROJECT_DIR}
-              echo "${GHCR_PAT}" | docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true
+              echo "$GHCR_PAT" | docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true
               docker pull ${IMAGE_BASE}:staging
               docker compose -f docker-compose.staging.yml up -d
             '
-          """
+          '''
         }
       }
     }
@@ -54,26 +59,21 @@ pipeline {
       }
       steps {
         withCredentials([
+          sshUserPrivateKey(credentialsId: 'ssh-ubuntu-key', keyFileVariable: 'SSH_KEYFILE', usernameVariable: 'SSH_USER'),
           string(credentialsId: 'ghcr-pat', variable: 'GHCR_PAT'),
-          usernamePassword(credentialsId: 'ssh-ubuntu', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS'),
           string(credentialsId: 'server-host', variable: 'SERVER_HOST')
         ]) {
-          sh """
-            if command -v sshpass >/dev/null 2>&1; then
-              echo "sshpass available"
-            else
-              if command -v apt-get >/dev/null 2>&1; then
-                apt-get update && apt-get install -y sshpass || true
-              fi
-            fi
-            sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SERVER_HOST} '
+          sh '''
+            set -e
+            chmod 600 "$SSH_KEYFILE"
+            ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" '
               set -e
               cd ${PROJECT_DIR}
-              echo "${GHCR_PAT}" | docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true
+              echo "$GHCR_PAT" | docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true
               docker pull ${IMAGE_BASE}:production
               docker compose -f docker-compose.production.yml up -d
             '
-          """
+          '''
         }
       }
     }
