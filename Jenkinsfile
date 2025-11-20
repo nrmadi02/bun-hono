@@ -5,28 +5,42 @@ pipeline {
     PROJECT_DIR = '/root/project'
     IMAGE_BASE  = 'ghcr.io/nrmadi02/hono-bun'
     GITHUB_USER = 'nrmadi02'
+    BRANCH_NAME_PARAM = "${params.BRANCH_NAME ?: env.BRANCH_NAME}"
+    IMAGE_TAG_PARAM = "${params.IMAGE_TAG ?: (env.BRANCH_NAME == 'master' ? 'production' : 'staging')}"
+  }
+
+  parameters {
+    string(name: 'BRANCH_NAME', defaultValue: '', description: 'Branch name from GitHub Actions')
+    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Image tag from GitHub Actions')
   }
 
   stages {
     stage('Debug branch') {
       steps {
         sh '''
-          echo "BRANCH_NAME=${BRANCH_NAME}"
+          echo "BRANCH_NAME=${BRANCH_NAME_PARAM}"
+          echo "IMAGE_TAG=${IMAGE_TAG_PARAM}"
           echo "GIT_BRANCH=${GIT_BRANCH}"
         '''
       }
     }
 
-    stage('Build & Push (GitHub Actions)') {
+    stage('Verify Image Available') {
       steps {
-        echo 'Build & push GitHub Actions'
+        sh '''
+          echo "Verifying image ${IMAGE_BASE}:${IMAGE_TAG_PARAM} is available..."
+          docker pull ${IMAGE_BASE}:${IMAGE_TAG_PARAM} || exit 1
+          echo "Image verified successfully!"
+        '''
       }
     }
 
     stage('Deploy staging') {
       when {
         expression {
-          return (env.BRANCH_NAME == 'staging') || (env.GIT_BRANCH?.contains('staging'))
+          return (BRANCH_NAME_PARAM == 'staging') || 
+                 (GIT_BRANCH?.contains('staging')) ||
+                 (IMAGE_TAG_PARAM == 'staging')
         }
       }
       steps {
@@ -40,7 +54,6 @@ pipeline {
             chmod 600 "$SSH_KEYFILE"
 
             # Pipe secret (GHCR_PAT) into remote docker login stdin.
-            # NOTE: IMAGE_BASE, GITHUB_USER, PROJECT_DIR expanded locally by the shell.
             printf "%s" "$GHCR_PAT" | ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" "set -e; cd ${PROJECT_DIR}; docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true; docker pull ${IMAGE_BASE}:staging; docker compose -f docker-compose.staging.yml up -d"
           '''
         }
@@ -50,7 +63,9 @@ pipeline {
     stage('Deploy production') {
       when {
         expression {
-          return (env.BRANCH_NAME == 'master') || (env.GIT_BRANCH?.contains('master'))
+          return (BRANCH_NAME_PARAM == 'master') || 
+                 (env.GIT_BRANCH?.contains('master')) ||
+                 (IMAGE_TAG_PARAM == 'production')
         }
       }
       steps {
