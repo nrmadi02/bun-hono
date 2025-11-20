@@ -16,7 +16,9 @@ pipeline {
 
     stage('Deploy staging') {
       when {
-        branch 'origin/staging'
+        expression {
+          return (env.BRANCH_NAME == 'staging') || (env.GIT_BRANCH?.contains('staging'))
+        }
       }
       steps {
         sshagent(credentials: ['ssh-ubuntu']) {
@@ -39,8 +41,10 @@ pipeline {
 
     stage('Deploy production') {
       when {
-        branch 'origin/master'
+      expression {
+        return (env.BRANCH_NAME == 'master') || (env.GIT_BRANCH?.contains('master'))
       }
+    }
       steps {
         sshagent(credentials: ['ssh-ubuntu']) {
           withCredentials([
