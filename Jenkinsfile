@@ -5,6 +5,8 @@ pipeline {
     PROJECT_DIR = '/root/project'
     IMAGE_BASE  = 'ghcr.io/nrmadi02/hono-bun'
     GITHUB_USER = 'nrmadi02'
+    SLACK_CHANNEL = '#deployment'  
+    SLACK_CREDENTIAL_ID = 'slack-token' 
   }
 
   stages {
@@ -62,6 +64,44 @@ pipeline {
             printf "%s" "$GHCR_PAT" | ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" "set -e; cd ${PROJECT_DIR}; docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true; docker pull ${IMAGE_BASE}:production; docker compose -f docker-compose.production.yml up -d"
           '''
         }
+      }
+    }
+  }
+
+  post {
+    success {
+      script {
+        def environment = env.BRANCH_NAME == 'staging' ? 'STAGING' : 'PRODUCTION'
+        slackSend(
+          channel: env.SLACK_CHANNEL,
+          color: 'good',
+          message: "✅ *Deployment ${environment} SUCCESS*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.BRANCH_NAME}\n<${env.BUILD_URL}|View Build>",
+          tokenCredentialId: env.SLACK_CREDENTIAL_ID
+        )
+      }
+    }
+    
+    failure {
+      script {
+        def environment = env.GIT_BRANCH.contains('staging') ? 'STAGING' : 'PRODUCTION'
+        slackSend(
+          channel: env.SLACK_CHANNEL,
+          color: 'danger',
+          message: "❌ *Deployment ${environment} FAILED*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.GIT_BRANCH.contains('staging') ? 'STAGING' : 'PRODUCTION'}\n<${env.BUILD_URL}|View Build>",
+          tokenCredentialId: env.SLACK_CREDENTIAL_ID
+        )
+      }
+    }
+    
+    aborted {
+      script {
+        def environment = env.GIT_BRANCH.contains('staging') ? 'STAGING' : 'PRODUCTION'
+        slackSend(
+          channel: env.SLACK_CHANNEL,
+          color: 'warning',
+          message: "⚠️ *Deployment ${environment} ABORTED*\nJob: `${env.JOB_NAME}`\nBuild: #${env.BUILD_NUMBER}\nBranch: ${env.GIT_BRANCH.contains('staging') ? 'STAGING' : 'PRODUCTION'}\n<${env.BUILD_URL}|View Build>",
+          tokenCredentialId: env.SLACK_CREDENTIAL_ID
+        )
       }
     }
   }
