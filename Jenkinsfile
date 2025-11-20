@@ -17,7 +17,6 @@ pipeline {
       }
     }
 
-
     stage('Build & Push (GitHub Actions)') {
       steps {
         echo 'Build & push GitHub Actions'
@@ -39,13 +38,10 @@ pipeline {
           sh '''
             set -e
             chmod 600 "$SSH_KEYFILE"
-            ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" '
-              set -e
-              cd ${PROJECT_DIR}
-              echo "$GHCR_PAT" | docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true
-              docker pull ${IMAGE_BASE}:staging
-              docker compose -f docker-compose.staging.yml up -d
-            '
+
+            # Pipe secret (GHCR_PAT) into remote docker login stdin.
+            # NOTE: IMAGE_BASE, GITHUB_USER, PROJECT_DIR expanded locally by the shell.
+            printf "%s" "$GHCR_PAT" | ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" "set -e; cd ${PROJECT_DIR}; docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true; docker pull ${IMAGE_BASE}:staging; docker compose -f docker-compose.staging.yml up -d"
           '''
         }
       }
@@ -54,8 +50,8 @@ pipeline {
     stage('Deploy production') {
       when {
         expression {
-        return (env.BRANCH_NAME == 'master') || (env.GIT_BRANCH?.contains('master'))
-      }
+          return (env.BRANCH_NAME == 'master') || (env.GIT_BRANCH?.contains('master'))
+        }
       }
       steps {
         withCredentials([
@@ -66,13 +62,9 @@ pipeline {
           sh '''
             set -e
             chmod 600 "$SSH_KEYFILE"
-            ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" '
-              set -e
-              cd ${PROJECT_DIR}
-              echo "$GHCR_PAT" | docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true
-              docker pull ${IMAGE_BASE}:production
-              docker compose -f docker-compose.production.yml up -d
-            '
+
+            # Pipe secret into remote docker login stdin, expand safe vars locally
+            printf "%s" "$GHCR_PAT" | ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" "set -e; cd ${PROJECT_DIR}; docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true; docker pull ${IMAGE_BASE}:production; docker compose -f docker-compose.production.yml up -d"
           '''
         }
       }
