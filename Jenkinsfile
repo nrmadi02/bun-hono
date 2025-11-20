@@ -16,18 +16,17 @@ pipeline {
 
     stage('Deploy staging') {
       when {
-        expression {
-          return (env.BRANCH_NAME == 'staging') || (env.GIT_BRANCH?.contains('staging'))
-        }
+        branch 'staging'
       }
       steps {
-        sshagent(credentials: ['ssh-ubuntu']) {
-          withCredentials([
-            string(credentialsId: 'ghcr-pat', variable: 'GHCR_PAT'),
-            string(credentialsId: 'server-host', variable: 'SERVER_HOST'),
-          ])
+        withCredentials([
+          string(credentialsId: 'ghcr-pat', variable: 'GHCR_PAT'),
+          usernamePassword(credentialsId: 'ssh-ubuntu', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS'),
+          string(credentialsId: 'server-host', variable: 'SERVER_HOST')
+        ]) {
           sh """
-            ssh -o StrictHostKeyChecking=no root@${SERVER_HOST} '
+            chmod 600 /dev/null || true
+            sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SERVER_HOST} '
               set -e
               cd ${PROJECT_DIR}
               echo "${GHCR_PAT}" | docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true
@@ -41,18 +40,17 @@ pipeline {
 
     stage('Deploy production') {
       when {
-      expression {
-        return (env.BRANCH_NAME == 'master') || (env.GIT_BRANCH?.contains('master'))
+        branch 'master'  
       }
-    }
       steps {
-        sshagent(credentials: ['ssh-ubuntu']) {
-          withCredentials([
-            string(credentialsId: 'ghcr-pat', variable: 'GHCR_PAT'),
-            string(credentialsId: 'server-host', variable: 'SERVER_HOST'),
-          ])
+        withCredentials([
+          string(credentialsId: 'ghcr-pat', variable: 'GHCR_PAT'),
+          usernamePassword(credentialsId: 'ssh-ubuntu', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS'),
+          string(credentialsId: 'server-host', variable: 'SERVER_HOST')
+        ]) {
           sh """
-            ssh -o StrictHostKeyChecking=no root@${SERVER_HOST} '
+            chmod 600 /dev/null || true
+            sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SERVER_HOST} '
               set -e
               cd ${PROJECT_DIR}
               echo "${GHCR_PAT}" | docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true
