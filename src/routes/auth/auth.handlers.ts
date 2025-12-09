@@ -18,6 +18,7 @@ import * as authService from "../../services/auth/auth.service";
 import * as sessionService from "../../services/auth/session.service";
 import * as passwordResetService from "../../services/auth/password-reset.service";
 import * as deviceService from "../../services/auth/device.service";
+import { sendResetPasswordEmailAsync } from "../../tasks/email/clients/send-email-async";
 
 export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 	try {
@@ -176,8 +177,7 @@ export const forgotPasswordHandler: AppRouteHandler<
 			);
 		}
 
-		// TODO: Send email to user with reset password token
-		// await sendPasswordResetEmailAsync([user.email], result.token);
+		await sendResetPasswordEmailAsync([user.email], result.token);
 
 		return successResponse(c, "Forgot password successful", {
 			token: result.token,

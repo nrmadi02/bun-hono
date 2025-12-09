@@ -5,8 +5,10 @@ import prisma from "prisma";
 import { createRouter } from "../../lib/create-app";
 import { env } from "../../config/env";
 import { VerifyEmailView } from "../../views/auth/verify-email.view";
+import { ResetPasswordView } from "../../views/auth/reset-password.view";
 
-const router = createRouter().get("/auth/verify-email", async (c) => {
+const router = createRouter()
+.get("/auth/verify-email", async (c) => {
 	try {
 		const token = c.req.query("token");
 
@@ -97,6 +99,23 @@ const router = createRouter().get("/auth/verify-email", async (c) => {
 			),
 		);
 	}
-});
+})
+.get("/auth/reset-password", async (c) => {
+	const isSuccess = c.req.query("success");
+	const message = c.req.query("message");
+	const token = c.req.query("token");
+	const error = c.req.query("error");
+
+	return c.html(
+		renderToString(
+			<ResetPasswordView
+				success={!!isSuccess}
+				token={token}
+				error={error}
+				message={message}
+			/>,
+		),
+	);
+})
 
 export default router;

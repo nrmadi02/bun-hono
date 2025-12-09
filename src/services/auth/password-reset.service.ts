@@ -34,6 +34,7 @@ export const createPasswordResetToken = async (userId: string) => {
 		data: {
 			token,
 			expiresAt: expires,
+			isUsed: false,
 			userId,
 		},
 	});
@@ -57,7 +58,7 @@ export const updatePasswordResetToken = async (
 
 	await prisma.passwordReset.update({
 		where: { id: resetId },
-		data: { token, expiresAt: expires },
+		data: { token, expiresAt: expires, isUsed: false },
 	});
 
 	return { token, expires };

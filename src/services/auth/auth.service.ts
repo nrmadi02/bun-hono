@@ -2,7 +2,7 @@ import prisma from "prisma";
 import type { Prisma } from "prisma/generated/client";
 import { Provider } from "prisma/generated/enums";
 import { generateAuthTokens, generateEmailVerificationToken } from "./token.service";
-import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-verification-email-async";
+import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-email-async";
 
 export const findUserByEmail = async (email: string) => {
 	return prisma.user.findUnique({
