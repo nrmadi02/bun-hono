@@ -1,0 +1,15 @@
+model CasbinRule {
+  id    Int     @id @default(autoincrement())
+  ptype String
+  v0    String?
+  v1    String?
+  v2    String?
+  v3    String?
+  v4    String?
+  v5    String?
+
+  @@index([ptype])
+  @@index([v0])
+  @@index([v1])
+  @@map("casbin_rule")
+}
