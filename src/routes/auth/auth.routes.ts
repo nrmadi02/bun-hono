@@ -17,6 +17,7 @@ import {
 } from "../../schemas/auth/auth-response.schema";
 import { baseResponseSchema } from "../../schemas/base.schema";
 import { validateToken } from "../../middlewares/auth.middleware";
+import { casbinMiddleware } from "../../middlewares/casbin.middleware";
 
 export const loginRoutes = createRoute({
 	path: "/auth/login",
@@ -117,7 +118,7 @@ export const getSessionsRoutes = createRoute({
 		401: errorResponseOpenAPIObjectConfig("Unauthorized"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
-	middleware: [validateToken],
+	middleware: [validateToken, casbinMiddleware("users", "read")],
 });
 
 export const getMeRoutes = createRoute({
@@ -139,7 +140,7 @@ export const getMeRoutes = createRoute({
 		401: errorResponseOpenAPIObjectConfig("Unauthorized"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
-	middleware: [validateToken],
+	middleware: [validateToken, casbinMiddleware("users", "read")],
 });
 
 export const forgotPasswordRoutes = createRoute({

@@ -6,6 +6,7 @@ import configureOpenAPI from "./lib/open-api";
 import auth from "./routes/auth/auth.index";
 import authPage from "./routes/auth/auth.page";
 import test from "./routes/test/test.index";
+import admin from "./routes/admin/admin.index";
 import "./config/env";
 import { prettyJSON } from "hono/pretty-json";
 import { setupBullBoard } from "./lib/bull-board";
@@ -24,7 +25,7 @@ setupBullBoard(app);
 
 registerWorkerEmail();
 
-const routes = [test, auth] as const;
+const routes = [test, auth, admin] as const;
 const pages = [authPage] as const;
 
 routes.forEach((route) => {

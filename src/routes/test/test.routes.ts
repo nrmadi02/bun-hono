@@ -5,6 +5,8 @@ import {
 	createErrorSchema,
 	createMessageObjectSchema,
 } from "../../schemas/base.schema";
+import { validateToken } from "../../middlewares/auth.middleware";
+import { casbinMiddleware } from "../../middlewares/casbin.middleware";
 
 export const test = createRoute({
 	path: "/test",
@@ -40,6 +42,7 @@ export const test = createRoute({
 			description: "The validation error(s)",
 		},
 	},
+	middleware: [validateToken, casbinMiddleware("users", "update")],
 });
 
 export type TestRoute = typeof test;
