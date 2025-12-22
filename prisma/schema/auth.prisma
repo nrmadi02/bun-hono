@@ -13,6 +13,9 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([role])
+  @@index([emailVerified])
 }
 
 model Account {
@@ -22,7 +25,7 @@ model Account {
   accessToken  String?
   password     String?
 
-  accessTokenExpiresAt DateTime?
+  accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
 
   userId String
@@ -37,24 +40,27 @@ model Session {
   sessionToken String   @unique
   expireAt     DateTime
 
-  deviceName   String?
-  ipAddress    String?
-  userAgent    String?
+  deviceName String?
+  ipAddress  String?
+  userAgent  String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expireAt])
 }
 
 model PasswordReset {
-  id String @id @default(uuid())
-  token String @unique
+  id        String   @id @default(uuid())
+  token     String   @unique
   expiresAt DateTime
-  isUsed Boolean @default(false)
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isUsed    Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
