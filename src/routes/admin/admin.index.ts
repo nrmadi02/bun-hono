@@ -6,16 +6,9 @@ import cacheRouter from "./cache/cache.index";
 
 const admin = createRouter();
 
-// Policies routes
 admin.route("/", policiesRouter);
-
-// RBAC routes
 admin.route("/", rbacRouter);
-
-// Users routes
 admin.route("/", usersRouter);
-
-// Cache management routes
 admin.route("/", cacheRouter);
 
 export default admin;

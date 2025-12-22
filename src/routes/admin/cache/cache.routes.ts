@@ -5,7 +5,6 @@ import { errorResponseOpenAPIObjectConfig } from "../../../lib/open-api";
 import { validateToken } from "../../../middlewares/auth.middleware";
 import { casbinMiddleware } from "../../../middlewares/casbin.middleware";
 
-// Clear all cache
 export const clearCacheRoute = createRoute({
   path: "/admin/cache/clear",
   method: "post",
@@ -33,7 +32,6 @@ export const clearCacheRoute = createRoute({
   middleware: [validateToken, casbinMiddleware("cache", "clear")],
 });
 
-// Clear specific user cache
 export const clearUserCacheRoute = createRoute({
   path: "/admin/cache/users/{userId}",
   method: "delete",
@@ -66,7 +64,6 @@ export const clearUserCacheRoute = createRoute({
   middleware: [validateToken, casbinMiddleware("cache", "clear")],
 });
 
-// Get cache stats
 export const getCacheStatsRoute = createRoute({
   path: "/admin/cache/stats",
   method: "get",

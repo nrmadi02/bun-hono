@@ -4,20 +4,8 @@ import { baseResponseSchema } from "../../../schemas/base.schema";
 import { errorResponseOpenAPIObjectConfig } from "../../../lib/open-api";
 import { validateToken } from "../../../middlewares/auth.middleware";
 import { casbinMiddleware } from "../../../middlewares/casbin.middleware";
+import { policyResponseSchema, policySchema } from "../../../schemas/policy/policy.schema";
 
-// Schema definitions
-const policySchema = z.object({
-  role: z.string().min(1, "Role is required"),
-  object: z.string().min(1, "Object is required"),
-  action: z.string().min(1, "Action is required"),
-});
-
-const policyResponseSchema = z.object({
-  policies: z.array(z.array(z.string())),
-  groupingPolicies: z.array(z.array(z.string())),
-});
-
-// Get all policies
 export const getAllPoliciesRoute = createRoute({
   path: "/admin/policies",
   method: "get",
@@ -40,7 +28,6 @@ export const getAllPoliciesRoute = createRoute({
   middleware: [validateToken, casbinMiddleware("policies", "read")],
 });
 
-// Add new policy
 export const addPolicyRoute = createRoute({
   path: "/admin/policies",
   method: "post",
@@ -74,7 +61,6 @@ export const addPolicyRoute = createRoute({
   middleware: [validateToken, casbinMiddleware("policies", "create")],
 });
 
-// Remove policy
 export const removePolicyRoute = createRoute({
   path: "/admin/policies",
   method: "delete",
@@ -108,7 +94,6 @@ export const removePolicyRoute = createRoute({
   middleware: [validateToken, casbinMiddleware("policies", "delete")],
 });
 
-// Reload policies
 export const reloadPoliciesRoute = createRoute({
   path: "/admin/policies/reload",
   method: "post",

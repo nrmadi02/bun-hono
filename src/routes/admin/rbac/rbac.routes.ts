@@ -4,14 +4,8 @@ import { baseResponseSchema } from "../../../schemas/base.schema";
 import { errorResponseOpenAPIObjectConfig } from "../../../lib/open-api";
 import { validateToken } from "../../../middlewares/auth.middleware";
 import { casbinMiddleware } from "../../../middlewares/casbin.middleware";
+import { roleAssignmentSchema } from "../../../schemas/rbac/rbac.schema";
 
-// Schema definitions
-const roleAssignmentSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
-  role: z.string().min(1, "Role is required"),
-});
-
-// Assign role to user
 export const assignRoleRoute = createRoute({
   path: "/admin/roles/assign",
   method: "post",
@@ -46,7 +40,6 @@ export const assignRoleRoute = createRoute({
   middleware: [validateToken, casbinMiddleware("roles", "assign")],
 });
 
-// Remove role from user
 export const removeRoleRoute = createRoute({
   path: "/admin/roles/remove",
   method: "post",
@@ -80,7 +73,6 @@ export const removeRoleRoute = createRoute({
   middleware: [validateToken, casbinMiddleware("roles", "remove")],
 });
 
-// Get users with specific role
 export const getRoleUsersRoute = createRoute({
   path: "/admin/roles/{role}/users",
   method: "get",

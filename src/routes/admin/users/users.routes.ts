@@ -5,7 +5,6 @@ import { errorResponseOpenAPIObjectConfig } from "../../../lib/open-api";
 import { validateToken } from "../../../middlewares/auth.middleware";
 import { casbinMiddleware } from "../../../middlewares/casbin.middleware";
 
-// Get user roles
 export const getUserRolesRoute = createRoute({
   path: "/admin/users/{userId}/roles",
   method: "get",
@@ -34,7 +33,6 @@ export const getUserRolesRoute = createRoute({
   middleware: [validateToken, casbinMiddleware("users", "read")],
 });
 
-// Update user role (with auto cache invalidation)
 export const updateUserRoleRoute = createRoute({
   path: "/admin/users/{userId}/role",
   method: "put",
