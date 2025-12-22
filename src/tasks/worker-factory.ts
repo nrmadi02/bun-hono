@@ -7,6 +7,11 @@ type WorkerManagerOptions = {
 	processor: Processor<Job>;
 	connection: IORedis;
 	label?: string;
+	concurrency?: number;
+	limiter?: {
+		max: number;
+		duration: number;
+	};
 };
 
 export const createWorkerManager = ({
@@ -14,12 +19,18 @@ export const createWorkerManager = ({
 	processor,
 	connection,
 	label = queueName,
+	concurrency = 1,
+	limiter,
 }: WorkerManagerOptions) => {
 	let workerInstance: Worker | null = null;
 	let workerInitPromise: Promise<Worker> | null = null;
 
 	const setupWorker = async () => {
-		const worker = new Worker(queueName, processor, { connection });
+		const worker = new Worker(queueName, processor, { 
+			connection,
+			concurrency,
+			limiter,
+		});
 
 		worker.on("completed", (job: Job) => {
 			console.info(`[${label}] Job ${job.id} completed (${job.name})`);

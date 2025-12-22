@@ -7,6 +7,11 @@ const { register, shutdown } = createWorkerManager({
   processor: emailWorkerProcessor,
   connection,
   label: 'email',
+  concurrency: 1,
+  limiter: {
+    max: 2,
+    duration: 1000
+  },
 });
 
 export const registerWorkerEmail = register;

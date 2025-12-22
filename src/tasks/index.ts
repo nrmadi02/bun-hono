@@ -10,6 +10,12 @@ const shutdownFns = [
 ];
 
 export const registerAllWorkers = async () => {
+  
+  if (process.env.NODE_ENV === 'test') {
+    console.log('🧪 Test environment: Workers not started');
+    return;
+  }
+  
   await Promise.all(registerFns.map((fn) => fn()));
 };
 

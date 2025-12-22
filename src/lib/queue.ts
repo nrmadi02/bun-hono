@@ -2,8 +2,12 @@ import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { env } from '../config/env';
 
+const getQueueName = (baseName: string) => {
+  return env.NODE_ENV === 'test' ? `${baseName}_test` : baseName;
+};
+
 const QUEUE = {
-  email: 'email',
+  email: getQueueName('email'),
 };
 
 const connection = new IORedis({
