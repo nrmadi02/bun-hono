@@ -18,6 +18,7 @@ import {
 import { baseResponseSchema } from "../../schemas/base.schema";
 import { validateToken } from "../../middlewares/auth.middleware";
 import { casbinMiddleware } from "../../middlewares/casbin.middleware";
+import { authLimiter, passwordResetLimiter } from "../../middlewares/rate-limit.middleware";
 
 export const loginRoutes = createRoute({
 	path: "/auth/login",
@@ -47,6 +48,7 @@ export const loginRoutes = createRoute({
 		404: errorResponseOpenAPIObjectConfig("User not found"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
+	middleware: [authLimiter],
 });
 
 export const registerRoutes = createRoute({
@@ -76,6 +78,7 @@ export const registerRoutes = createRoute({
 		422: errorResponseOpenAPIObjectConfig("The validation error(s)"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
+	middleware: [authLimiter],
 });
 
 export const logoutRoutes = createRoute({
@@ -171,6 +174,7 @@ export const forgotPasswordRoutes = createRoute({
 		404: errorResponseOpenAPIObjectConfig("User not found"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
+	middleware: [passwordResetLimiter],
 });
 
 export const resetPasswordRoutes = createRoute({
@@ -201,6 +205,7 @@ export const resetPasswordRoutes = createRoute({
 		422: errorResponseOpenAPIObjectConfig("The validation error(s)"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
+	middleware: [passwordResetLimiter],
 });
 
 export type LoginRoutes = typeof loginRoutes;

@@ -2,13 +2,16 @@ import { createRouter } from "../../lib/create-app";
 import * as handlers from "./auth.handlers";
 import * as routes from "./auth.routes";
 
-const router = createRouter()
-	.openapi(routes.registerRoutes, handlers.registerHandler)
-	.openapi(routes.loginRoutes, handlers.loginHandler)
-	.openapi(routes.logoutRoutes, handlers.logoutHandler)
-	.openapi(routes.getSessionsRoutes, handlers.getSessionsHandler)
-	.openapi(routes.getMeRoutes, handlers.getMeHandler)
-	.openapi(routes.forgotPasswordRoutes, handlers.forgotPasswordHandler)
-	.openapi(routes.resetPasswordRoutes, handlers.resetPasswordHandler);
+const router = createRouter();
+
+router.openapi(routes.registerRoutes, handlers.registerHandler);
+router.openapi(routes.loginRoutes, handlers.loginHandler);
+
+router.openapi(routes.forgotPasswordRoutes, handlers.forgotPasswordHandler);
+router.openapi(routes.resetPasswordRoutes, handlers.resetPasswordHandler);
+
+router.openapi(routes.logoutRoutes, handlers.logoutHandler);
+router.openapi(routes.getSessionsRoutes, handlers.getSessionsHandler);
+router.openapi(routes.getMeRoutes, handlers.getMeHandler);
 
 export default router;
