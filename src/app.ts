@@ -11,7 +11,6 @@ import health from "./routes/health/health.index";
 import "./config/env";
 import { prettyJSON } from "hono/pretty-json";
 import { setupBullBoard } from "./lib/bull-board";
-import { registerWorkerEmail } from "./tasks/email/tasker";
 import { apiLimiter, adminLimiter } from "./middlewares/rate-limit.middleware";
 import { secureHeaders } from 'hono/secure-headers'
 
@@ -31,8 +30,6 @@ app.use("/static/*", serveStatic({ root: "./", onFound: (path, c) => {
 
 configureOpenAPI(app);
 setupBullBoard(app);
-
-registerWorkerEmail();
 
 const routes = [test, auth, admin, health] as const;
 const pages = [authPage] as const;

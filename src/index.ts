@@ -1,6 +1,7 @@
 import { serve } from "bun";
 import app from "./app";
 import { registerAllWorkers, shutdownAllWorkers } from "./tasks";
+import prisma from "../prisma";
 
 const port = process.env.PORT || 3000;
 
@@ -8,10 +9,19 @@ console.log(`Server running on port ${port}`);
 
 const handleShutdown = async (signal: NodeJS.Signals) => {
 	console.info(`${signal} signal received`);
+	console.info("🛑 Shutting down gracefully...");
+	
 	try {
+		// shutdownAllWorkers() already closes Redis connection
 		await shutdownAllWorkers();
+		console.info("✅ Workers and Redis shut down successfully");
+		
+		await prisma.$disconnect();
+		console.info("✅ Database disconnected");
+		
+		console.info("✅ Graceful shutdown complete");
 	} catch (error) {
-		console.error("[shutdown] Failed to cleanup worker:", error);
+		console.error("❌ Error during shutdown:", error);
 	} finally {
 		process.exit(0);
 	}
