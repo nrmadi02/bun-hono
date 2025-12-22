@@ -27,6 +27,7 @@ RUN apt-get update -y \
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV USE_DB_ADAPTER=true
 
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/dist ./dist
