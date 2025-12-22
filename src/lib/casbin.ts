@@ -115,11 +115,9 @@ export async function getEnforcer(): Promise<Enforcer> {
     if (env.NODE_ENV === "production" || process.env.USE_DB_ADAPTER === "true") {
       const adapter = new PrismaAdapter();
       enforcer = await newEnforcer(modelPath, adapter);
-      console.log("✅ Casbin enforcer initialized with DATABASE adapter");
     } else {
       const policyPath = path.join(process.cwd(), "src/permission/policy.csv");
       enforcer = await newEnforcer(modelPath, policyPath);
-      console.log("✅ Casbin enforcer initialized with CSV adapter");
     }
     
     await enforcer.loadPolicy();
@@ -130,10 +128,7 @@ export async function getEnforcer(): Promise<Enforcer> {
 
 export async function reloadPolicy(): Promise<void> {
   enforcer = null;
-
   await getEnforcer();
-
-  console.log("✅ Casbin policy reloaded");
 }
 
 export async function syncCsvToDatabase(): Promise<void> {
