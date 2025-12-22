@@ -1,7 +1,3 @@
-/**
- * Redis Store for Rate Limiter
- * Provides shared rate limiting across multiple server instances
- */
 
 import type { Redis } from "ioredis";
 
@@ -17,11 +13,6 @@ export interface RedisStoreOptions {
 	windowMs?: number;
 }
 
-/**
- * Redis-based rate limit store
- * Shared across all server instances
- * Persists rate limit data in Redis
- */
 export class RedisRateLimitStore implements RateLimitStore {
 	public client: Redis;
 	public prefix: string;
@@ -36,7 +27,6 @@ export class RedisRateLimitStore implements RateLimitStore {
 	async increment(key: string): Promise<{ totalHits: number; resetTime: Date | undefined }> {
 		const redisKey = `${this.prefix}${key}`;
 
-		// Use Redis MULTI for atomic operations
 		const pipeline = this.client.pipeline();
 		pipeline.incr(redisKey);
 		pipeline.pttl(redisKey);
@@ -55,12 +45,10 @@ export class RedisRateLimitStore implements RateLimitStore {
 		if (incrErr) throw incrErr;
 		if (ttlErr) throw ttlErr;
 
-		// If this is the first request or key has no TTL, set expiration
 		if (ttl === -1 || ttl === -2) {
 			await this.client.pexpire(redisKey, this.windowMs);
 		}
 
-		// Calculate reset time
 		const resetTime = ttl > 0 ? new Date(Date.now() + ttl) : new Date(Date.now() + this.windowMs);
 
 		return {
@@ -84,9 +72,6 @@ export class RedisRateLimitStore implements RateLimitStore {
 	}
 }
 
-/**
- * Create Redis store for rate limiter
- */
 export const createRedisStore = (options: RedisStoreOptions): RedisRateLimitStore => {
 	return new RedisRateLimitStore(options);
 };
