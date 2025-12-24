@@ -6,6 +6,7 @@ const router = createRouter();
 
 router.openapi(routes.registerRoutes, handlers.registerHandler);
 router.openapi(routes.loginRoutes, handlers.loginHandler);
+router.openapi(routes.refreshTokenRoutes, handlers.refreshTokenHandler);
 
 router.openapi(routes.forgotPasswordRoutes, handlers.forgotPasswordHandler);
 router.openapi(routes.resetPasswordRoutes, handlers.resetPasswordHandler);

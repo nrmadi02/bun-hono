@@ -11,6 +11,7 @@ import type {
 	GetSessionsRoutes,
 	LoginRoutes,
 	LogoutRoutes,
+	RefreshTokenRoutes,
 	RegisterRoutes,
 	ResetPasswordRoutes,
 } from "./auth.routes";
@@ -30,12 +31,11 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 			return errorResponse(c, "Invalid credentials", ["Invalid credentials"], 400);
 		}
 
-		const { user, token, expires, refreshToken } = result;
+		const { user, token, expires, refreshToken, refreshExpires } = result;
+		const deviceInfo = deviceService.getDeviceInfo(c);
 
 		await sessionService.manageUserSessions(user.id);
-
-		const deviceInfo = deviceService.getDeviceInfo(c);
-		await sessionService.createSession(token, expires, user.id, deviceInfo);
+		await sessionService.createSession(token, expires, user.id, deviceInfo, refreshToken, refreshExpires);
 
 		return successResponse(c, "Login successful", {
 			token,
@@ -69,6 +69,39 @@ export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 		});
 
 		return successResponse(c, "Register successful", {
+			user: toUserResponseSchema(user),
+		});
+	} catch (error) {
+		return catchError(error);
+	}
+};
+
+export const refreshTokenHandler: AppRouteHandler<RefreshTokenRoutes> = async (c) => {
+	try {
+		const refreshToken = c.var.refreshToken;
+
+		const result = await authService.loginUserByRefreshToken(refreshToken);
+	
+		if (!result) {
+			return errorResponse(c, "Invalid refresh token", ["Invalid refresh token"], 400);
+		}
+
+		const { user, token, expires, refreshToken: newRefreshToken, refreshExpires } = result;
+		const deviceInfo = deviceService.getDeviceInfo(c);
+
+		await sessionService.manageUserSessions(user.id);
+	
+		const session = await sessionService.getSessionById(result.id);
+		
+		if (!session) {
+			await sessionService.createSession(token, expires, user.id, deviceInfo, newRefreshToken, refreshExpires);
+		} else {
+			await sessionService.updateSession(token, expires, deviceInfo, newRefreshToken, refreshExpires, session?.id);
+		}
+		
+		return successResponse(c, "Login successful", {
+			token,
+			refreshToken: newRefreshToken,
 			user: toUserResponseSchema(user),
 		});
 	} catch (error) {

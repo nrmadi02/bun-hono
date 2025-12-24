@@ -11,12 +11,13 @@ import {
 	getMeResponseSchema,
 	loginResponseSchema,
 	logoutResponseSchema,
+	refreshTokenResponseSchema,
 	registerResponseSchema,
 	resetPasswordResponseSchema,
 	sessionsResponseSchema,
 } from "../../schemas/auth/auth-response.schema";
 import { baseResponseSchema } from "../../schemas/base.schema";
-import { validateToken } from "../../middlewares/auth.middleware";
+import { validateRefreshToken, validateToken } from "../../middlewares/auth.middleware";
 import { casbinMiddleware } from "../../middlewares/casbin.middleware";
 import { authLimiter, passwordResetLimiter } from "../../middlewares/rate-limit.middleware";
 
@@ -79,6 +80,28 @@ export const registerRoutes = createRoute({
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
 	middleware: [authLimiter],
+});
+
+export const refreshTokenRoutes = createRoute({
+	path: "/auth/refresh",
+	method: "patch",
+	tags: ["Auth"],
+	description: "Refresh access token",
+	responses: {
+		200: {
+			description: "Token refreshed successfully",
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(refreshTokenResponseSchema),
+				},
+			},
+		},
+		404: errorResponseOpenAPIObjectConfig("Refresh token not found"),
+		400: errorResponseOpenAPIObjectConfig("Invalid refresh token"),
+		401: errorResponseOpenAPIObjectConfig("Unauthorized"),
+		500: errorResponseOpenAPIObjectConfig("Internal server error"),
+	},
+	middleware: [validateRefreshToken, authLimiter],
 });
 
 export const logoutRoutes = createRoute({
@@ -215,3 +238,4 @@ export type GetSessionsRoutes = typeof getSessionsRoutes;
 export type GetMeRoutes = typeof getMeRoutes;
 export type ForgotPasswordRoutes = typeof forgotPasswordRoutes;
 export type ResetPasswordRoutes = typeof resetPasswordRoutes;
+export type RefreshTokenRoutes = typeof refreshTokenRoutes;

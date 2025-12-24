@@ -37,3 +37,4 @@ export const resetPasswordResponseSchema = z.boolean();
 export const getMeResponseSchema = z.object({
 	user: userResponseSchema,
 });
+export const refreshTokenResponseSchema = logoutResponseSchema;
