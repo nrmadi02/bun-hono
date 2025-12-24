@@ -3,6 +3,7 @@ import type { Prisma } from "prisma/generated/client";
 import { Provider } from "prisma/generated/enums";
 import { generateAuthTokens, generateEmailVerificationToken } from "./token.service";
 import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-email-async";
+import { tokenService } from ".";
 
 export const findUserByEmail = async (email: string) => {
 	return prisma.user.findUnique({
@@ -130,3 +131,22 @@ export const registerUser = async (data: {
 	return user;
 };
 
+export const loginUserByRefreshToken = async (refreshToken?: string) => {
+	if (!refreshToken) {
+		return null;
+	}
+	
+	const token = await tokenService.findRefreshToken(refreshToken);
+
+	if (!token || !token.refreshTokenExpiresAt || token.refreshTokenExpiresAt < new Date()) {
+		return null;
+	}
+
+	const newTokens = await generateAuthTokens(token.user);
+
+	return {
+		id: token.id,
+		user: token.user,
+		...newTokens,
+	};
+};

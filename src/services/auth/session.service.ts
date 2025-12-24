@@ -56,6 +56,8 @@ export const createSession = async (
 	expires: Date,
 	userId: string,
 	deviceInfo: DeviceInfo,
+	refreshToken?: string,
+	refreshTokenExpiresAt?: Date,
 ): Promise<void> => {
 	await prisma.session.create({
 		data: {
@@ -65,6 +67,32 @@ export const createSession = async (
 			deviceName: deviceInfo.deviceName,
 			ipAddress: deviceInfo.ipAddress,
 			userAgent: deviceInfo.userAgent,
+			refreshToken,
+			refreshTokenExpiresAt,
+		},
+	});
+};
+
+export const updateSession = async (
+	token: string,
+	expires: Date,
+	deviceInfo: DeviceInfo,
+	refreshToken?: string,
+	refreshTokenExpiresAt?: Date,
+	sessionId?: string,
+): Promise<void> => {
+	await prisma.session.update({
+		where: {
+			id: sessionId,
+		},
+		data: {
+			expireAt: expires,
+			sessionToken: token,
+			deviceName: deviceInfo.deviceName,
+			ipAddress: deviceInfo.ipAddress,
+			userAgent: deviceInfo.userAgent,
+			refreshToken,
+			refreshTokenExpiresAt,
 		},
 	});
 };
@@ -81,6 +109,14 @@ export const findSessionByToken = async (token: string) => {
 	return prisma.session.findUnique({
 		where: {
 			sessionToken: token,
+		},
+	});
+};
+
+export const getSessionById = async (id: string) => {
+	return prisma.session.findUnique({
+		where: {
+			id,
 		},
 	});
 };

@@ -1,6 +1,7 @@
 import { sign, verify } from "hono/jwt";
 import type { User } from "prisma/generated/client";
 import { env } from "../../config/env";
+import prisma from "prisma";
 
 export interface TokenPayload {
 	id: string;
@@ -93,3 +94,20 @@ export const verifyToken = async (
 	return payload as unknown as TokenPayload & { exp: number };
 };
 
+export const findToken = async (token: string) => {
+	return await prisma.session.findUnique({
+		where: { sessionToken: token },
+		include: {
+			user: true
+		}
+	});
+}
+
+export const findRefreshToken = async (token: string) => {
+	return await prisma.session.findUnique({
+		where: { refreshToken: token },
+		include: {
+			user: true
+		}
+	});
+}
