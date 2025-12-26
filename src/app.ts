@@ -11,7 +11,6 @@ import health from "./routes/health/health.index";
 import "./config/env";
 import { prettyJSON } from "hono/pretty-json";
 import { setupBullBoard } from "./lib/bull-board";
-import { apiLimiter, adminLimiter } from "./middlewares/rate-limit.middleware";
 import { secureHeaders } from 'hono/secure-headers'
 
 const app = createApp();
@@ -20,9 +19,6 @@ app.use(prettyJSON());
 app.use(secureHeaders())
 
 app.use("/api/*", cors());
-
-app.use("/api/*", apiLimiter);
-app.use("/api/v1/admin/*", adminLimiter);
 
 app.use("/static/*", serveStatic({ root: "./", onFound: (path, c) => {
 	c.header("Cache-Control", "public, max-age=31536000, immutable");
