@@ -38,3 +38,11 @@ export const getMeResponseSchema = z.object({
 	user: userResponseSchema,
 });
 export const refreshTokenResponseSchema = logoutResponseSchema;
+
+export const resendEmailVerificationResponseSchema = z.object({
+	token: z.string(),
+});
+
+export const verifyEmailResponseSchema = z.object({
+	user: userResponseSchema,
+});

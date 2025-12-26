@@ -38,3 +38,11 @@ export const resetPasswordSchema = z.object({
 	message: "Passwords do not match",
 	path: ["confirmPassword"],
 });
+
+export const resendEmailVerificationSchema = z.object({
+	email: emailSchema,
+});
+
+export const verifyEmailSchema = z.object({
+	token: z.string().min(1, { message: "Token is required" }),
+});
