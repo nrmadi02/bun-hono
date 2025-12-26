@@ -125,6 +125,15 @@ export const registerUser = async (data: {
 }) => {
 	const user = await createUser(data);
 	const token = await generateEmailVerificationToken(user);
+	const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2);
+
+	await prisma.emailVerification.create({
+		data: {
+			userId: user.id,
+			token,
+			expiresAt,
+		},
+	});
 
 	await sendVerificationEmailAsync([user.email], token);
 
